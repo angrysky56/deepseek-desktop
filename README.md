@@ -1,4 +1,10 @@
-# DeepSeek Desktop 🚀
+# DeepSeek Desktop 🚀 modified poorly by angrysky56 to use MCP-Server tools via
+
+
+# app config (currently set on gitignore or you will give away your app secret keys and because I am not a coder) you will need to add one as a file in the root of the project:
+deepseek_desktop_config.json
+
+# It needs path handling fixed I think currently so will only run very basic tools that don't have keys or extra directories etc since I have no idea what I am doing lol.
 
 **DeepSeek Desktop** is a cross-platform desktop application that brings the power of [DeepSeek](https://chat.deepseek.com/), your AI companion, directly to your computer. Designed for simplicity and convenience, it allows you to interact with DeepSeek in a native desktop environment, complete with support for `localStorage` and `cookies`.
 

@@ -20,9 +20,12 @@ async function loadConfig() {
 
 async function resolveCommandPath(command) {
   try {
-    return await which(command);
+    const resolvedPath = await which(command);
+    // Wrap path in quotes if it contains spaces
+    return /\s/.test(resolvedPath) ? `"${resolvedPath}"` : resolvedPath;
   } catch {
-    return command; // Return original if not in PATH
+    // Handle paths with spaces in the original command
+    return /\s/.test(command) ? `"${command}"` : command;
   }
 }
 
@@ -32,13 +35,20 @@ async function startMCPServers() {
   for (const [serverName, serverConfig] of Object.entries(config.mcpServers)) {
     try {
       const fullCommand = await resolveCommandPath(serverConfig.command);
-      const sanitizedArgs = serverConfig.args.map(arg => 
-        arg.replace(/\$([A-Z_]+)/g, (_, varName) => process.env[varName] || '')
-      );
+      // Properly quote arguments containing spaces
+      const sanitizedArgs = serverConfig.args.map(arg => {
+        const processed = arg.replace(/\$([A-Z_]+)/g, (_, varName) => process.env[varName] || '');
+        return /\s/.test(processed) ? `"${processed}"` : processed;
+      });
 
-      const serverProcess = spawn(`"${fullCommand}"`, sanitizedArgs, {
+      const serverProcess = spawn(fullCommand, sanitizedArgs, {
         shell: true,
-        windowsVerbatimArguments: true
+        windowsVerbatimArguments: true,
+        cwd: path.normalize(__dirname), // Normalize path
+        env: {
+          ...process.env,
+          ...(serverConfig.env || {})
+        }
       });
 
       activeServers.set(serverName, {
@@ -46,7 +56,7 @@ async function startMCPServers() {
         config: serverConfig,
         status: 'starting'
       });
-
+    
       serverProcess.stdout.on('data', (data) => {
         console.log(`[${serverName}] STDOUT: ${data}`);
         if(data.toString().includes('Server started')) {
@@ -77,9 +87,7 @@ async function startMCPServers() {
       });
     }
   }
-}
-
-function cleanupServers() {
+}function cleanupServers() {
   activeServers.forEach((server, name) => {
     try {
       if(server.process) {
@@ -114,8 +122,8 @@ function createWindow() {
     height: 800,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
-      nodeIntegration: false,
-      contextIsolation: true,
+      nodeIntegration: true,
+      contextIsolation: false,
     },
     icon: path.join(__dirname, 'deepseek-logo.png')
   });

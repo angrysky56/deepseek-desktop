@@ -44,5 +44,9 @@
       "target": "AppImage",
       "icon": "deepseek-logo.png"
     }
+  },
+  "dependencies": {
+    "portfinder": "^1.0.32",
+    "which": "^5.0.0"
   }
 }
